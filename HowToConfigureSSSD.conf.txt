@@ -111,7 +111,7 @@ c_rehash
 
 
 
-Administrtator pw = tahoe
+Administrtator pw = xxxx
 
 
 TuxLinux=linux
