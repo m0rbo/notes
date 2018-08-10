@@ -1,0 +1,192 @@
+###########################
+mostly from TID#
+https://www.suse.com/support/kb/doc/?id=7017932
+
+Notes# for ldaps aka ssl/tls, in the sssd.conf, use:
+ldap_uri ldaps://...
+
+in /etc/ldap.conf change:
+host server.domain:636
+
+also do the "SSL/TLS certificate Notes" section below.
+These steps are if using self signed cert. If using global some of these will not be needed.
+
+###########################
+this is the contents of 
+/etc/sssd/sssd.conf:
+[sssd]
+config_file_version = 2
+services = nss,pam,sudo
+domains = sles12lp.suse
+debug_level = 9
+
+[nss]
+filter_users = root
+filter_groups = root
+
+[pam]
+
+[domain/sles12lp.suse]
+id_provider = ldap
+auth_provider = ldap
+ldap_schema = rfc2307bis
+enumerate = true
+cache_credentials = false
+case_sensitive = true
+sudo_provider = ldap
+ldap_uri = ldap://sles12lp.suse
+ldap_search_base = ou=people,dc=suse
+ldap_group_search_base = ou=group,dc=suse
+ldap_group_object_class = posixGroup
+ldap_tls_reqcert = never
+
+[sudo]
+
+
+###########################
+contents of 
+/etc/ldap.conf
+host sles12lp.suse:389
+base ou=people,dc=suse
+nss_connect_policy persist
+ssl no
+bind_policy soft
+bind_timelimit 30
+timelimit 30
+
+###########################
+Afterwards check if nsswitch conf uses sss configuration:
+
+/etc/nsswitch.conf
+passwd: files sss
+group:  files sss
+
+###########################
+To get authentication working check/add sss to pam config:
+
+pam-config -a --sss
+###########################
+https://serverfault.com/questions/734422/enable-ldap-client-in-sles-12-from-command-line
+
+So, after some research / tests I finally found out how to configure the LDAP Client on the newer SLES releases without GUI interaction.
+
+1) Be sure that the packages needed are installed (I use sudo with ldap that's why I install libsss_sudo. You don't have to install it if you don't need it).
+zypper install sssd libsss_sudo
+
+2) Configure PAM modules (I personally set them to create a home folder on login and set the umask for the new directory to 077)
+pam-config --add --sss && pam-config --add --mkhomedir --mkhomedir-umask=0077
+
+3) Disable the "old" nscd to avoid conflicts and enable the sssd
+service nscd stop && chkconfig nscd off && chkconfig sssd on
+
+4) Finally edit the nsswitch.conf and sssd.conf with your settings and remember to restart the sssd service
+*I used to have a problem on SLES 12 when starting the sssd service due to a socket that was left open from nscd (even though nscd was disabled / stopped). With unlink /var/run/nscd/socket I managed fix it.
+
+
+###########################
+test ldap connection:
+ ldapsearch -LLL -D "uid=ldap1,ou=people,dc=suse"  -p 389 -h sles12lp.suse -b "dc=suse" -s sub "(objectclass=*)" -W -x
+password=ldap1
+
+ldapsearch -LLL -D "cn=Administrator,dc=suse" -p 389 -h sles12lp.suse -b "dc=suse" -s sub "(objectclass=*)" -W -x
+
+test ldaps connection:
+ldapsearch -LLL -D "cn=Administrator,dc=suse" -H ldaps://sles12lp.suse -b "dc=suse" -s sub "(objectclass=*)" -W -x
+ldapsearch -LLL -D "cn=Administrator,dc=suse" -H ldaps://sles12lp.suse -b "dc=suse" -s sub "(cn=tuxlinux2)" -W -x
+
+
+####SSL/TLS certificate Notes###
+To configure the "ldapsearch" client:
+echo "TLS_REQCERT never" >> /etc/openldap/ldap.conf
+get the cert (grab the parts beteen and including BEGIN/END):
+echo ""|openssl s_client -showcerts -connect sles12lp.suse:636|openssl x509 -outform PEM
+save to a file: ldapservercert.pem
+
+move to: /etc/pki/trust/anchors
+ie: /etc/pki/trust/anchors/ldapservercert.pem
+then run:
+c_rehash
+
+(Not needed, but "update-ca-certificates" also, just for fun)
+
+
+
+Administrtator pw = tahoe
+
+
+TuxLinux=linux
+tuxlinux2=linux
+
+ldap1=ldap1
+ldap2=ldap2
+ldap3=ldap3
+###########################
+chldappw.ldif
+#ldapmodify -c -a -f chldappw.ldif -h hostname -p port -D dn -w password
+dn: cn=TuxLinux,ou=people,dc=suse
+changetype: modify
+replace: userPassword
+userPassword: {SSHA}9ffbupx2HelSYt9ivbmL6bF32CfXtkv4
+###############################
+creategroup.ldif
+dn: cn=adminis,ou=group,dc=suse
+changetype: add
+objectclass: top
+objectclass: groupOfNames
+member: cn=TuxLinux,ou=people,dc=suse
+member: cn=tuxlinux2,ou=people,dc=suse
+cn: adminis
+###############################
+posixgroup.ldif
+dn: cn=tuxlinux2,ou=group,dc=suse
+changetype: add
+objectClass: posixGroup
+objectClass: top
+objectclass: groupOfNames
+member: cn=tuxlinux2,ou=people,dc=suse
+cn: tuxlinux2
+gidNumber: 1010
+###############################
+useradd.ldif
+# coworker Tux
+dn: cn=TuxLinux,ou=people,dc=suse
+objectClass: inetOrgPerson
+cn: TuxLinux
+givenName: Tux
+sn: Linux
+mail: tux@example.com
+uid: tux
+###############################
+usercreate.ldif
+#From:
+#https://www.learnitguide.net/2017/11/how-to-create-ldap-users-and-groups.html
+# coworker Tux
+dn: cn=tuxlinux2,ou=people,dc=suse
+uid: tuxlinux2
+cn: tuxlinux2
+givenName: tuxlinux2
+sn: tuxlinux2
+mail: tuxlinux2@learnitguide.net
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: top
+objectClass: shadowAccount
+#pw is linux
+userPassword: {SSHA}9ffbupx2HelSYt9ivbmL6bF32CfXtkv4
+shadowLastChange: 17449
+shadowMin: 0
+shadowMax: 99999
+shadowWarning: 7
+loginShell: /bin/bash
+uidNumber: 1010
+gidNumber: 1010
+homeDirectory: /home/tuxlinux2
+
+# newuser1, Group, learnitguide.net
+dn: cn=tuxlinux2,ou=group,dc=suse
+objectClass: posixGroup
+objectClass: top
+cn: tuxlinux2
+gidNumber: 1010
