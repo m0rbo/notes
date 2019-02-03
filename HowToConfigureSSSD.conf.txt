@@ -121,6 +121,45 @@ ldap1=ldap1
 ldap2=ldap2
 ldap3=ldap3
 ###########################
+LDAP SERVER SETUP notes:
+On the LDAP server I had to make some changes to allow TLS connections.
+This was for openldap on Leap15. openldap version openldap2-2.4.46-lp150.8.3.1.x86_64.
+
+https://serverfault.com/questions/451869/ldap-modify-insufficient-access-50
+https://serverfault.com/questions/686565/insufficient-access-to-edit-openldap-cn-config-with-external-sasl-authentication
+https://serverfault.com/questions/732862/ldap-modify-insufficient-access-50-when-changing-password/732889
+
+Now I don't remember the exact problem, but the gist of it and the resolution came from the links above.
+The gist is, I needed to make changes to the internal configuration of the ldap DB. 
+But, by default this isn't easy to change.
+
+Add this to the end of /etc/openldap/slapd.conf:
+# Using TLS to secure communication between LDAP clients and the server is strongly recommended
+# To enable TLS, first visit /etc/sysconfig/openldap and set OPENLDAP_START_LDAPS="yes", then
+# set and uncomment the following lines:
+#TLSProtocolMin 3.1
+TLSProtocolMin 3.3
+TLSCipherSuite HIGH:!SSLv3:!SSLv2:!ADH
+TLSCACertificateFile /etc/pki/trust/anchors/YaST-CA.pem
+TLSCertificateFile /etc/ssl/servercerts/servercert.pem
+TLSCertificateKeyFile /etc/ssl/servercerts/serverkey.pem
+
+created this:
+cat /etc/openldap/tls.ldiff 
+dn: cn=config
+changetype: modify
+add: olcTLSProtocolMin
+olcTLSProtocolMin: 3.3
+
+checked and applied changes with these commands:
+ldapsearch -LLL -D "cn=Administrator,dc=suse" -H ldapi:/// -Y EXTERNAL -b 'cn=config' -W
+ldapwhoami -Y EXTERNAL -H ldapi:///
+ldapmodify -c -a -f tls.ldif -H ldapi:/// 
+ldapmodify -c -a -f tls.ldiff -H ldapi:/// 
+ldapmodify -c -f tls.ldiff -H ldapi:/// 
+ldapmodify -c -f tls.ldiff -H ldapi:/// -Y EXTERNAL
+
+###########################
 chldappw.ldif
 #ldapmodify -c -a -f chldappw.ldif -h hostname -p port -D dn -w password
 dn: cn=TuxLinux,ou=people,dc=suse

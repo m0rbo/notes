@@ -1,0 +1,60 @@
+Here are the steps to create an application coredump:
+
+1) ulimit -c unlimited
+2) echo '|/usr/lib/systemd/systemd-coredump %p %u %g %s %t %e' > /proc/sys/kernel/core_pattern
+3) sysctl -a | grep 'kernel.core_pattern'
+     (to confirm the correct core_pattern command)
+
+4) rcapparmor stop
+5) sysctl -w kernel.suid_dumpable=2
+6) coredumpctl list
+     (there should be none)
+
+7) kill -ABRT $(pidof sssd_be)
+(or whatever steps it takes to cause a coredump)
+
+
+8) coredumpctl list
+     (assuming /usr/lib/sssd/sssd_be is listed)
+9) coredumpctl -o core.sssd_be dump /usr/lib/sssd/sssd_be
+10) ls -l core.sssd_be
+     (to confirm the core file was created, in the cwd)
+11) getappcore core.sssd_be
+     (this should create a file similar to a supportconfig in /var/log/nts...appcore.tgz. Please attach that file to the SR, or email it.)
+
+1] https://www.suse.com/support/kb/doc/?id=3054866
+2] https://www.suse.com/support/kb/doc/?id=7017137
+3] https://www.suse.com/support/kb/doc/?id=7018642
+
+
+
+1) ulimit -c unlimited
+
+2) echo '|/usr/lib/systemd/systemd-coredump %p %u %g %s %t %e' >
+/proc/sys/kernel/core_pattern
+
+3) sysctl -a | grep 'kernel.core_pattern'
+       (to confirm the correct core_pattern command)
+
+4) rcapparmor stop
+
+5) sysctl -w kernel.suid_dumpable=2
+
+6) coredumpctl list
+       (there should be none)
+
+7) Try to login with an AD account that has been creating the segfault and killing the process.
+
+8) coredumpctl list
+       (assuming /usr/lib/sssd/sssd_be is listed)
+
+9) coredumpctl -o core.sssd_be dump /usr/lib/sssd/sssd_be
+
+10) ls -l core.sssd_be
+       (to confirm the core file was created, in the cwd)
+
+11) getappcore core.sssd_be
+       (this should create a file similar to a supportconfig in
+/var/log/nts...appcore.tgz. Please attach that file to the SR, or
+email it.)
+

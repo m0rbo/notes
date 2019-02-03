@@ -1,0 +1,67 @@
+I think AppArmor is fairly minimal in it's initial configuration.
+
+AppArmor is similar to SELinux.
+Here is the description from the docs:
+"AppArmor(r) is an application security solution designed specifically to apply privilege confinement to suspect programs. AppArmor allows the administrator to specify the domain of activities the program can perform by developing a security profile. A security profile is a listing of files that the program may access and the operations the program may perform. AppArmor secures applications by enforcing good application behavior without relying on attack signatures, so it can prevent attacks even if previously unknown vulnerabilities are being exploited."
+
+    From the supportconfig you provided:
+
+# /etc/init.d/boot.apparmor status
+apparmor module is loaded.
+37 profiles are loaded.
+37 profiles are in enforce mode.
+       /sbin/klogd
+       /sbin/syslog-ng
+       /sbin/syslogd
+       /usr/lib/apache2/mpm-prefork/apache2
+       /usr/lib/apache2/mpm-prefork/apache2//DEFAULT_URI
+       /usr/lib/apache2/mpm-prefork/apache2//HANDLING_UNTRUSTED_INPUT
+       /usr/lib/apache2/mpm-prefork/apache2//phpsysinfo
+       /usr/lib/dovecot/anvil
+       /usr/lib/dovecot/auth
+       /usr/lib/dovecot/config
+       /usr/lib/dovecot/deliver
+       /usr/lib/dovecot/dict
+       /usr/lib/dovecot/dovecot-auth
+       /usr/lib/dovecot/dovecot-lda
+       /usr/lib/dovecot/imap
+       /usr/lib/dovecot/imap-login
+       /usr/lib/dovecot/lmtp
+       /usr/lib/dovecot/log
+       /usr/lib/dovecot/managesieve
+       /usr/lib/dovecot/managesieve-login
+       /usr/lib/dovecot/pop3
+       /usr/lib/dovecot/pop3-login
+       /usr/lib/dovecot/ssl-params
+       /usr/sbin/avahi-daemon
+       /usr/sbin/dnsmasq
+       /usr/sbin/dovecot
+       /usr/sbin/identd
+       /usr/sbin/mdnsd
+       /usr/sbin/nmbd
+       /usr/sbin/nscd
+       /usr/sbin/ntpd
+       /usr/sbin/smbd
+       /usr/sbin/smbldap-useradd
+       /usr/sbin/smbldap-useradd///etc/init.d/nscd
+       /usr/sbin/winbindd
+       /usr/{sbin/traceroute,bin/traceroute.db}
+       /{usr/,}bin/ping
+0 profiles are in complain mode.
+1 processes have profiles defined.
+1 processes are in enforce mode.
+       /usr/sbin/nscd (1025)
+
+
+To disable a profile, you can create symlinks in the /etc/apparmor.d/disable directory and the restart apparmor.
+Maybe it's best to do this one at a time, until sssd is no longer affected?
+
+ln -s /etc/apparmor.d/usr.sbin.nscd /etc/apparmor.d/disable/
+systemctl restart apparmor
+
+Out of the list above, i would think maybe nscd, or one of the smb/winbindd might affect ssh/sssd. But, in searching through all the profiles, I can't find something that specifically calls out sssd or ssh.
+
+More details on AppArmor can be found here:
+https://www.suse.com/documentation/sles-12/book_security/data/cha_apparmor_start.html
+
+
