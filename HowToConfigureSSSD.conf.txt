@@ -100,6 +100,11 @@ To configure the "ldapsearch" client:
 echo "TLS_REQCERT never" >> /etc/openldap/ldap.conf
 get the cert (grab the parts beteen and including BEGIN/END):
 echo ""|openssl s_client -showcerts -connect sles12lp.suse:636|openssl x509 -outform PEM
+
+(Or, if using TLSv1.2 only, in SLES11-SP4, use openssl1.)
+( echo ""|openssl1 s_client -showcerts -connect sles12lp.suse:636|openssl x509 -outform PEM )
+(sles11: cp ldapservercert.pem to /etc/ssl/certs/
+
 save to a file: ldapservercert.pem
 
 move to: /etc/pki/trust/anchors
@@ -128,6 +133,7 @@ This was for openldap on Leap15. openldap version openldap2-2.4.46-lp150.8.3.1.x
 https://serverfault.com/questions/451869/ldap-modify-insufficient-access-50
 https://serverfault.com/questions/686565/insufficient-access-to-edit-openldap-cn-config-with-external-sasl-authentication
 https://serverfault.com/questions/732862/ldap-modify-insufficient-access-50-when-changing-password/732889
+http://www.openldap.org/faq/data/cache/185.html
 
 Now I don't remember the exact problem, but the gist of it and the resolution came from the links above.
 The gist is, I needed to make changes to the internal configuration of the ldap DB. 
@@ -158,6 +164,21 @@ ldapmodify -c -a -f tls.ldif -H ldapi:///
 ldapmodify -c -a -f tls.ldiff -H ldapi:/// 
 ldapmodify -c -f tls.ldiff -H ldapi:/// 
 ldapmodify -c -f tls.ldiff -H ldapi:/// -Y EXTERNAL
+
+to "add" the entry, use "add..."
+to "change/modify" the entry, use "replace"
+like this:
+
+cat tls.ldiff 
+dn: cn=config
+changetype: modify
+replace: olcTLSProtocolMin
+olcTLSProtocolMin: 3.1
+
+Then:
+ldapmodify -c -f tls.ldiff -H ldapi:/// -Y EXTERNAL
+
+
 
 ###########################
 chldappw.ldif
