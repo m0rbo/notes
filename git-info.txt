@@ -19,3 +19,23 @@
   246  2018-08-10 14:52:27 git commit -m "new updates"
   247  2018-08-10 14:52:43 git status
   248  2018-08-10 14:53:16 git push
+
+after adding new files to .gitignore if they already existed and now you want to ignore them,
+clear the cache then add all the files again.
+
+git rm -r --cached .
+
+or to delete 1 file:
+git rm -r --cached filename.txt
+
+now add all back:
+git add .
+
+or to add 1 file:
+git add filename.txt
+
+then commit:
+git commit -m "message"
+
+then push
+
