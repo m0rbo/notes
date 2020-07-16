@@ -1,0 +1,10 @@
+Run the following steps on each node:
+
+# SUSEConnect -d
+# SUSEConnect --cleanup
+# cd /etc/pki/trust/anchors/
+# curl smtserver.domain.com/smt.crt -o registration-server.pem
+# update-ca-certificates
+# SUSEConnect --write-config --url https://smtserver.domain.com
+# SUSEConnect --status-text (this should confirm the registration with a status of "Registered".)
+Then check the repository list with zypper repos which should no longer contain any SCC repositories.

@@ -22,6 +22,12 @@ Here are the steps to create an application coredump:
 11) getappcore core.sssd_be
      (this should create a file similar to a supportconfig in /var/log/nts...appcore.tgz. Please attach that file to the SR, or email it.)
 
+New TID numbers:
+https://www.suse.com/support/kb/doc/?id=000015982
+https://www.suse.com/support/kb/doc/?id=000018634
+https://www.suse.com/support/kb/doc/?id=000018871
+
+These are old:
 1] https://www.suse.com/support/kb/doc/?id=3054866
 2] https://www.suse.com/support/kb/doc/?id=7017137
 3] https://www.suse.com/support/kb/doc/?id=7018642
