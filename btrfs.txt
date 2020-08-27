@@ -1,0 +1,26 @@
+I recently had a disk failure or corrupted partition with a btrfs partition.
+On boot it kept getting a stack trace running btrfs balance.
+
+Before running any recovery commands, I wanted to get some files off the 
+disk so I booted off a USB disk into rescue mode.
+
+It took me a while to figure out how to mount the btrfs subvolumes.
+
+I couldn't find "how to mount subvolumes" mentioned in any TIDs.
+Did I overlook a TID with this info?
+
+If not, shouldn't we add this to one of the "rescue" TIDs?
+Maybe this one:
+https://www.suse.com/support/kb/doc/?id=7018376
+
+Ultimately I found these steps and they worked:
+mount /dev/sda2 /mnt
+btrfs subvolume list -p /mnt
+mount -o subvolid=264 /dev/sda2 /mnt/var/lib/named
+
+Is this the correct way to mount the btrfs subvolumes?
+Is this a correct "rescue" method?
+
+I was able to recover my files then I was able to recover the primary 
+partition following some of the btrfs recovery TIDs.
+

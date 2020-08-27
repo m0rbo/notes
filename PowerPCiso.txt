@@ -1,0 +1,38 @@
+ke a directory called "ISOFILES" and copy the contents of the DVD/ISO to that directory:
+mkdir /tmp/isomnt/
+mkdir /tmp/powerpc/ISOFILES/
+mount -o loop SLE-12-SP5-Server-DVD-ppc64le-GM-DVD1.iso /tmp/isomnt/
+cp -a /tmp/isomnt/* /tmp/powerpc/ISOFILES/
+
+
+Then remove the boot and ppc directories from that location.
+rm -rf /tmp/powerpc/ISOFILES/boot
+rm -rf /tmp/powerpc/ISOFILES/ppc
+
+Then from the "PowerPC" ISO, copy the directories /boot and /ppc to the above dir:
+cp -a /tmp/isomnt/boot /tmp/powerpc/
+cp -a /tmp/isomnt/ppc /tmp/powerpc/
+
+*make any custom edits or file changes you need*
+Then cd to /tmp/powerpc/
+
+The directory structure in your "/tmp/powerpc/" directory should look like this:
+ls -la /tmp/powerpc/
+boot/
+ISOFILES/
+ppc/
+
+Now, in the directory /tmp/powerpc/ run this command:
+mkisofs -v -o SLES12PPC.iso -U -chrp-boot -R -J -V SLES12PPC.001 -graft-points boot=boot ppc=ppc ISOFILES/
+
+This should add all the SUSE ISO files to your custom ISO (SLES12PPC.iso).
+
+Explanation of the mkisofs command flags are:
+-o ISOFILE aka --output ISOFILE
+-v verbose
+-U Allow Untranslated filenames
+-R Generate Rock Ridge directory information
+-J Generate Joliet directory information
+-volid aka -V Volume ID
+-chrp-boot Add CHRP boot header
+-graft-points Allow to use graft points for filenames

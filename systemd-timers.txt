@@ -1,0 +1,4 @@
+systemd timers
+https://wiki.archlinux.org/index.php/Systemd/Timers
+systemctl list-timers --all
+

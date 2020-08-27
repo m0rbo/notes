@@ -1,0 +1,2 @@
+zypper --releasever=15.2 ref
+zypper --releasever=15.2 dup

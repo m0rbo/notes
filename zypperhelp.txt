@@ -1,0 +1,5 @@
+zypper se -t pattern
+zypper info -t pattern patternname
+
+list all patterns info...
+zypper info -t pattern $(zypper se -t pattern|awk -F\| '{print $2}'|grep -v Name)

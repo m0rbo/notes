@@ -1,0 +1,185 @@
+9-28-17 linux list...
+I recently had a disk failure or corrupted partition with a btrfs partition.
+On boot it kept getting a stack trace running btrfs balance.
+
+Before running any recovery commands, I wanted to get some files off the 
+disk so I booted off a USB disk into rescue mode.
+
+It took me a while to figure out how to mount the btrfs subvolumes.
+
+I couldn't find "how to mount subvolumes" mentioned in any TIDs.
+Did I overlook a TID with this info?
+
+If not, shouldn't we add this to one of the "rescue" TIDs?
+Maybe this one:
+https://www.suse.com/support/kb/doc/?id=7018376
+
+Ultimately I found these steps and they worked:
+mount /dev/sda2 /mnt
+btrfs subvolume list -p /mnt
+mount -o subvolid=264 /dev/sda2 /mnt/var/lib/named
+
+Is this the correct way to mount the btrfs subvolumes?
+Is this a correct "rescue" method?
+
+I was able to recover my files then I was able to recover the primary 
+partition following some of the btrfs recovery TIDs.
+
+
+#######################################################################
+12-21-16 linux list...
+I made some test and now understand creating and deleting subvolume better.
+Based on my sles12sp1 output:
+btrfs subvolume list -a /
+ID 257 gen 601 top level 5 path <FS_TREE>/@
+ID 258 gen 587 top level 257 path <FS_TREE>/@/.snapshots
+ID 259 gen 588 top level 258 path <FS_TREE>/@/.snapshots/1/snapshot
+ID 260 gen 371 top level 257 path <FS_TREE>/@/boot/grub2/i386-pc
+ID 261 gen 371 top level 257 path <FS_TREE>/@/boot/grub2/x86_64-efi
+ID 262 gen 371 top level 257 path <FS_TREE>/@/home
+ID 263 gen 500 top level 257 path <FS_TREE>/@/opt
+ID 264 gen 418 top level 257 path <FS_TREE>/@/srv
+....
+
+Steps for btrfs subvolume create - manually (not using mksubvolume):
+Step1: mount /dev/mapper/sys-root -o subvolid=257 /mnt/
+Question: I had to use top level id 257 instead of 5 or using 257 I have 
+the root under /mnt. If I mount subvolid=5 I got /mnt/@/ where I'm not 
+sure if this is more correct way.
+
+Step2: btrfs subvolume create /mnt/var/subvol-test
+Step2 outcome: ID 323 gen 601 top level 257 path 
+<FS_TREE>/@/var/subvol-test1
+Step3: vi /etc/fstab added the entry
+UUID=cd1aef16-85c3-4cd0-a444-8adac3145b5c /var/subvol-test1 btrfs 
+subvol=@/var/subvol-test1 0 0
+Step4: mount /var/subvol-test1
+
+I also tried mksubvolume which is a great tool and automated the whole 
+stuff for me. May I ask if there is also a subvoldelete command around 
+or planned? 
+
+Steps to delete a subvolume I figured out, please confirm if the steps 
+are correct:
+Step1: mount /dev/mapper/sys-root -o subvolid=257 /mnt/
+Step2: btrfs subvolume delete /mnt/var/subvol-test1 -c
+Step3: remove the entry in /etc/fstab which mounts /var/subvol-test1
+
+Correct?
+
+Thanks
+Bo
+
+#######################################################################
+4-18-19
+> I am unable to remove a subvol "@/srv"
+> I did a normal install of SLES12sp3 with all defaults. Now I am
+> attempting to unmount /srv and mount over it's own XFS filesystem on
+> a 400GB drive.
+
+try this:
+
+umount /srv
+mount -o subvolid=5 $ROOT_DEVICE /mnt
+btrfs subvol delete /mnt/@/srv
+umount /mnt
+
+Rationale: 
+
+ - you can't delete /srv while it's mounted
+ - after unmounting, you have to access it via the root subvolume with
+   id 5.
+
+Regards
+Martin
+
+#######################################################################
+
+using a plan based off this link:
+https://jonamonleon.wordpress.com/2016/03/28/migrate-btrfs-setup-to-a-
+new-bigger-or-equal-disk-the-dirty-way/
+
+Migrate BTRFS setup to a new (bigger or equal) disk: The dirty way
+MARCH 28, 2016 LEAVE A COMMENT
+Imagine you are in the situation where your btrfs disk is getting filled up, or is just about to fail or you just want to install a bigger HD, or even better: You are migrating to a SSD disk setup.
+
+Migrating partitions with traditional filesystems such as ext4, or FAT32 is easy, since you just have to format a partition on the new disk with the same type and just
+
+cp -a /mnt/source /mnt/destination
+
+Being /mnt/source your mountpoint for the old disk partition and /mnt/destination the new one.
+
+But with btrfs, the thing gets a little more complicated, since the contents of those partitions are not just plain and simple files and folders: You have subvolumes, snapshots, etc… and they behave in a special way or have specific commands to manage them.
+
+There is a solution, a fast solution, in case you wan to migrate without all the fuss of replicating the subvolumes, use btrfs send and receive, etc….
+
+You can just add the new disk’s partition to the btrfs pool, getting a raid1 data structure, then reduce the data structure to raid0 and finally, removing the old disk from the array.
+
+First, create the new btrfs partition on the new disk, I’m going to assume /dev/sda2 is the btrfs partition on the old disk, while /dev/sdb2 is the btrfs partition on the new one.
+
+First, we create the btrfs partition:
+
+mkfs.btrfs /dev/sdb2
+
+Then, we add the partition to our array: Let’s suppose you mounted /dev/sda2 on /mnt, we would add the new partition like so:
+
+btrfs device add /dev/sdb2 /mnt
+
+You will be warned by a message saying all the data on /dev/sdb2 will be destroyed, and this is because everything on this partition, including the UUID, will be identical to what you had on the original one at /dev/sda2
+
+Afterwards, we have to convert the data structure to raid0:
+
+btrfs balance start -dconvert=raid0 -mconvert=raid0 -sconvert=raid0 /mnt -f
+
+We will probably get a warning if we don’t specify the “-f” option: BTRFS does not like to have single system data structures if you have more than one disk, but it’ll be fine.
+
+NOTE: These operations might take a long time to complete, depending on the amount of data on your brtfs partitions(s)
+
+Finally, once the balance concludes, you can remove the “old” disk’s partition:
+
+btrfs device delete /dev/sda2 /mnt
+
+Btrfs will take a really long time on this final step, since it has to move every chunk of data remaining on /dev/sda2 over to /dev/sdb2, but once you’re done, you can safely reboot and remove the old disk.
+
+I must say again, this is a “dirty” and not so elegant method, but it does the job and is the best way in case you are in a rush or the subvolume/snapshot structure is way too complicated. Keep in mind the new partition must be same size or bigger than the old one for this to work without problems.
+
+Enjoy!
+
+#######################################################################
+using a plan based off this link(copied above):
+https://jonamonleon.wordpress.com/2016/03/28/migrate-btrfs-setup-to-a-
+new-bigger-or-equal-disk-the-dirty-way/
+
+
+So I followed these steps and everything seems to be working ok.
+In reality, you can do this while the system live and running.
+Unless there is a heavy IO load there should be no noticeable impact.
+
+
+parted -l
+parted /dev/sdb
+parted -l
+btrfs fi show /var/lib/docker
+btrfs fi df /var/lib/docker
+btrfs device add /dev/sdb1 /var/lib/docker btrfs fi show /var/lib/docker btrfs fi df /var/lib/docker btrfs fi balance /var/lib/docker btrfs fi df /var/lib/docker btrfs fi show /var/lib/docker btrfs balance start -dconvert=raid0 -mconvert=raid0 -sconvert=raid0 /var/lib/docker btrfs balance start -dconvert=raid0 -mconvert=raid0 -sconvert=raid0 /var/lib/docker -f
+
+btrfs fi show /var/lib/docker
+btrfs fi df /var/lib/docker
+btrfs device delete /dev/sda3 /var/lib/docker btrfs fi df /var/lib/docker btrfs fi show /var/lib/docker ls /var/lib/docker
+
+For grins, i added the deleted device /dev/sda3 back to root /.
+btrfs device add /dev/sda3 /
+
+It let me add it, but I couldn't run the balance because it's RO.
+btrfs fi balance /
+Starting balance without any filters.
+ERROR: error during balancing '/': Read-only file system
+
+Which, if you really wanted to do that, we could probably fix.
+
+Brad
+
+
+#######################################################################
+#######################################################################
+#######################################################################
