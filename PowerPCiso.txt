@@ -23,9 +23,36 @@ ISOFILES/
 ppc/
 
 Now, in the directory /tmp/powerpc/ run this command:
+SLES12:
 mkisofs -v -o SLES12PPC.iso -U -chrp-boot -R -J -V SLES12PPC.001 -graft-points boot=boot ppc=ppc ISOFILES/
 
+In SLES15, the filenames were too long and we receive and error:
+mkisofs: Error: ISOFILES/<snip> have the same Joliet name
+mkisofs: Joliet file names differ after 75 chars
+mkisofs: Try to use the option -joliet-long
+mkisofs: Joliet tree sort failed.
+
+SLES15 needs "-joliet-long"
+mkisofs -v -o SLES12PPC.iso -U -chrp-boot -R -J -joliet-long -V SLES12PPC.001 -graft-points boot=boot ppc=ppc ISOFILES/
+
 This should add all the SUSE ISO files to your custom ISO (SLES12PPC.iso).
+#######################
+SLES12:
+mkisofs -v -o SLES12PPC.iso -U -chrp-boot -R -J -V SLES12PPC.001 -graft-points boot=boot ppc=ppc ISOFILES/
+This should add all the SUSE ISO files to your custom ISO (SLES15PPC.iso).
+
+SLES15:
+In SLES15, the filenames were too long and we receive an error:
+mkisofs: Error: ISOFILES/<snip> have the same Joliet name
+mkisofs: Joliet file names differ after 75 chars
+mkisofs: Try to use the option -joliet-long
+mkisofs: Joliet tree sort failed.
+SLES15 needs "-joliet-long"
+mkisofs -v -o SLES15PPC.iso -U -chrp-boot -R -J -joliet-long -V SLES15PPC.001 -graft-points boot=boot ppc=ppc ISOFILES/
+
+This should add all the SUSE ISO files to your custom ISO (SLES12PPC.iso).
+#######################
+#######################
 
 Explanation of the mkisofs command flags are:
 -o ISOFILE aka --output ISOFILE

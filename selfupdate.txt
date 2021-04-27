@@ -1,0 +1,8 @@
+    <self_update config:type="boolean">true</self_update>
+    <self_update_url>
+    #SLES15:
+    http://192.168.0.46/SUSE/Updates/SLE-INSTALLER/15-SP1/x86_64/update/
+    #SLES12:
+    http://sles12s1.suse/SUSE/Updates/SLE-SERVER-INSTALLER/12-SP5/x86_64/update/
+    </self_update_url>
+

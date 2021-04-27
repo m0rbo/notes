@@ -1,0 +1,11 @@
+Need to also mount "run":
+
+mount -o bind /dev /mnt/dev
+mount -o bind /proc /mnt/proc
+mount -o bind /sys /mnt/sys
+mount -o bind /run /mnt/run
+
+then 
+chroot /mnt
+
+and now systemctl commands will work in chroot env.

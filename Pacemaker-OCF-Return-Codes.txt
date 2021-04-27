@@ -1,0 +1,23 @@
+https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/s-ocf-return-codes.html
+
+B.4. OCF Return Codes
+The following table outlines the different OCF return codes and the type of recovery the cluster will initiate when a failure code is received. Although counterintuitive, even actions that return 0 (aka. OCF_SUCCESS) can be considered to have failed, if 0 was not the expected return value.
+Table B.4. OCF Return Codes and their Recovery Types
+
+RC	OCF Alias	Description	RT
+0	OCF_SUCCESS	Success. The command completed successfully. This is the expected result for all start, stop, promote and demote commands.	soft
+1	OCF_ERR_GENERIC	Generic "there was a problem" error code.	soft
+2	OCF_ERR_ARGS	The resource’s configuration is not valid on this machine. E.g. it refers to a location not found on the node.	hard
+3	OCF_ERR_UNIMPLEMENTED	The requested action is not implemented.	hard
+4	OCF_ERR_PERM	The resource agent does not have sufficient privileges to complete the task.	hard
+5	OCF_ERR_INSTALLED	The tools required by the resource are not installed on this machine.	hard
+6	OCF_ERR_CONFIGURED	The resource’s configuration is invalid. E.g. required parameters are missing.	fatal
+7	OCF_NOT_RUNNING	The resource is safely stopped. The cluster will not attempt to stop a resource that returns this for any action.	N/A
+8	OCF_RUNNING_MASTER	The resource is running in master mode.	soft
+9	OCF_FAILED_MASTER	The resource is in master mode but has failed. The resource will be demoted, stopped and then started (and possibly promoted) again.	soft
+other	N/A	Custom error code.	soft
+
+Exceptions to the recovery handling described above:
+Probes (non-recurring monitor actions) that find a resource active (or in master mode) will not result in recovery action unless it is also found active elsewhere.
+The recovery action taken when a resource is found active more than once is determined by the resource’s multiple-active property (see Section 5.4, “Resource Options”).
+Recurring actions that return OCF_ERR_UNIMPLEMENTED do not cause any type of recovery.

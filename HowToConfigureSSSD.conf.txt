@@ -65,6 +65,27 @@ group:  files sss
 To get authentication working check/add sss to pam config:
 
 pam-config -a --sss
+
+edit /etc/pam.d/common-auth-pc
+#added this stuff to prevent local ssh auth failures, which is just a log message that the local
+#account fails, while it still works via sssd.
+examplelog output:
+#2021-04-27T10:54:05.162327-05:00 s12s2n sshd[12914]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=192.168.0.28  user=tuxlinux2
+#2021-04-27T10:54:05.187911-05:00 s12s2n sshd[12914]: pam_sss(sshd:auth): authentication success; logname= uid=0 euid=0 tty=ssh ruser= rhost=192.168.0.28 user=tuxlinux2
+#2021-04-27T10:54:05.189382-05:00 s12s2n sshd[12912]: Accepted keyboard-interactive/pam for tuxlinux2 from 192.168.0.28 port 58736 ssh2
+
+cat /etc/pam.d/common-auth-pc
+auth    required        pam_env.so
+#auth   optional        pam_gnome_keyring.so
+#auth   sufficient      pam_unix.so     try_first_pass 
+#auth   required        pam_sss.so      use_first_pass  
+auth        [default=1 ignore=ignore success=ok] pam_succeed_if.so uid >= 500 quiet
+auth        [default=1 success=ok] pam_localuser.so
+auth        sufficient    pam_unix.so nullok try_first_pass
+auth        requisite     pam_succeed_if.so uid >= 1000 quiet_success
+auth        sufficient    pam_sss.so forward_pass
+auth        required      pam_deny.so
+
 ###########################
 https://serverfault.com/questions/734422/enable-ldap-client-in-sles-12-from-command-line
 
