@@ -1,0 +1,6 @@
+chmod -x /usr/lib/evolution-data-server/evolution-source-registry
+chmod -x /usr/lib/evolution-data-server/evolution-calendar-factory
+chmod -x /usr/lib/evolution-data-server/evolution-data-server/evolution-alarm-notify
+chmod -x /usr/lib/evolution-data-server/evolution-addressbook-factory
+zypper al evolution-data-server
+zypper al evolution-data-server-lang

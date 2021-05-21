@@ -12,6 +12,9 @@ also do the "SSL/TLS certificate Notes" section below.
 These steps are if using self signed cert. If using global some of these will not be needed.
 
 ###########################
+change debug/log levels on the fly
+sssctl debug-level 6
+###########################
 this is the contents of 
 /etc/sssd/sssd.conf:
 [sssd]

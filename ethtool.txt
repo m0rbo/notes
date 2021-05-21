@@ -1,0 +1,15 @@
+ethtool -K eth0 gso off gro off tso off lro off
+
+cat /etc/sysconfig/network/ifcfg-eth0
+ETHTOOL_OPTIONS='-K eth0 gso off gro off tso off lro off'
+
+ethtool -k eth0 | grep -i tcp-segmentation-offload
+ethtool -k eth0 | grep -i generic-receive-offload
+ethtool -k eth0 | grep -i generic-segmentation-offload
+ethtool -k eth0 | grep -i large-receive-offload
+
+#These values relate to these entries:
+#gso = generic-segmentation-offload
+#gro = generic-receive-offload
+#tso = tcp-segmentation-offload
+#lro = large-receive-offload
