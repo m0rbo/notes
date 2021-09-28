@@ -1,2 +1,2 @@
-zypper --releasever=15.2 ref
-zypper --releasever=15.2 dup
+zypper --releasever=15.3 ref
+zypper --releasever=15.3 dup

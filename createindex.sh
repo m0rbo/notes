@@ -53,5 +53,6 @@ else
 echo "Disk space:" >> $fulldir/index.html
 echo "$(df -h /localssd)" >> $fulldir/index.html
 fi
+echo "<br> " >> $fulldir/index.html
 echo $(date) >> $fulldir/index.html
 cat $fulldir/index.tail >> $fulldir/index.html

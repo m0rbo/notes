@@ -1,0 +1,7 @@
+issue with yast YaST looking ugly on putty
+solve that by using:
+echo "export NCURSES_NO_UTF8_ACS=1" >> /etc/bash.bashrc.local
+
+then login again.
+
+

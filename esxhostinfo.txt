@@ -1,0 +1,52 @@
+Update command:
+esxcli software profile install -p ESXi-6.5.0-20170702001-standard -d https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml
+
+that didn't work cause the "20170702001" is old and I couldn't figure out how to pass the new one "201803001" to that command.
+But downloading the .zip file and using this command worked:
+esxcli software vib update -d /vmfs/volumes/openleap/ESXi650-201803001.zip
+
+
+
+from the web interface:
+6.5.0 Update 1 build 7388607
+image profile: ESXi-6.5.0-20170104001-standard
+
+esxcli system version get
+   Product: VMware ESXi
+   Version: 6.5.0
+   Build: Releasebuild-7388607
+   Update: 1
+   Patch: 36
+
+
+[root@esxhost:~] esxcli software profile get
+(Updated) ESXi-6.5.0-20170104001-standard
+   Name: (Updated) ESXi-6.5.0-20170104001-standard
+   Vendor: VMware, Inc.
+   Creation Time: 2018-02-20T03:48:18
+   Modification Time: 2018-04-13T18:33:28
+   Stateless Ready: True
+   Description: 
+
+
+starting again... Jan 7, 2020.
+Tried to update to 6.7 x
+from this URL:
+https://esxi-patches.v-front.de/ESXi-6.7.0.html
+
+Tried this command, but got an error:
+esxcli software profile update -p ESXi-6.7.0-20191204001-standard -d https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml
+ [InstallationError]
+ [Errno 28] No space left on device
+       vibs = VMware_locker_tools-light_11.0.1.14773994-15160134
+ Please refer to the log file for more details.
+
+then downloaded the VIB directly from here: (note the version number,taken from the error output above):
+
+wget  http://hostupdate.vmware.com/software/VUM/PRODUCTION/main/esx/vmw/vib20/tools-light/VMware_locker_tools-light_11.0.1.14773994-15160134.vib
+
+installed the vib with: (must use full path):
+esxcli software vib install -f -v /vmfs/volumes/datastore2/VMware_locker_tools-light_11.0.1.14773994-15160134.vib
+
+then installed the full update:
+esxcli software profile update -p ESXi-6.7.0-20191204001-standard -d https://hostupdate.vmware.com/software/VUM/PRODUCTION/main/vmw-depot-index.xml

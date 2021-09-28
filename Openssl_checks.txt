@@ -1,2 +1,5 @@
 #Check cert dates
 openssl x509 -in $1 -noout -text|grep Valid -A2
+
+#check if server connection supports tls1.2
+#echo ""|openssl-1_1 s_client -tls1_2 -connect 192.168.0.90:443 -verify 6

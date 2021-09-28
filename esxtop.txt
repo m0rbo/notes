@@ -1,0 +1,4 @@
+esxtop issue on esxhosts...
+TERM=xterm esxtop
+https://kb.vmware.com/s/article/2001448
+
