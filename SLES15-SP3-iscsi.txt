@@ -1,0 +1,40 @@
+From:
+https://docs.microsoft.com/en-us/azure/virtual-machines/workloads/sap/high-availability-guide-suse-pacemaker#create-iscsi-device-on-iscsi-target-server
+
+ISCSI "server":
+zypper in targetcli-fb-common
+
+zypper in python3-targetcli-fb
+
+mkdir /sbd
+
+targetcli backstores/fileio create sbdhana /sbd/sbdhana 50M write_back=false
+
+targetcli iscsi/ create iqn.2006-04.hana.local:hana
+
+targetcli iscsi/iqn.2006-04.hana.local:hana/tpg1/luns/ create /backstores/fileio/sbdhana
+
+targetcli iscsi/iqn.2006-04.hana.local:hana/tpg1/acls/ create iqn.2006-04.hana-0.local:192.168.0.76
+
+targetcli iscsi/iqn.2006-04.hana.local:hana/tpg1/acls/ create iqn.2006-04.hana-1.local:192.168.0.76
+
+targetcli saveconfig
+
+
+systemctl start targetcli.service
+systemctl enable targetcli.service
+
+systemctl start targetclid.service
+systemctl enable targetclid.service
+
+
+
+
+ISCSI "client":
+vi /etc/iscsi/initiatorname.iscsi
+InitiatorName=iqn.2006-04.hana-0.local:192.168.0.76 (same thing as the "acls" line... in the above)
+systemctl restart iscsid
+systemctl restart iscsi
+iscsiadm -m discovery --type=st --portal=192.168.0.74:3260
+iscsiadm -m node -T iqn.2006-04.hana.local:hana --login --portal=192.168.0.74:3260
+iscsiadm -m node -p 192.168.0.74:3260 -T iqn.2006-04.hana.local:hana --op=update --name=node.startup --value=automatic

@@ -1,0 +1,5 @@
+server 192.168.0.190
+zone suse
+update delete testmachine.suse A
+update add testmachine.suse 172800 A 192.168.0.227
+send

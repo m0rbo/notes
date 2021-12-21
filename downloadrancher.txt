@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+#---------------------------------------------------------
+#
+#$ vi .rancher_funs
+#$ source  .rancher_funs # Or you can add this script to your login profile file to auto-load
+#$ download_rke v1.2.1
+#$ download_kubectl v1.19.10
+#$ download_helm v3.7.1
+
+
+# Download rke,kubectl and helm binaries on Mac & Linux
+# Usage:
+# To download a specific version of RKE 
+# $ download_rke v1.1.1
+# or just execute download_rke to get the latest one     
+#---------------------------------------------------------
+# Author: Ansil Hameed Kunju
+#---------------------------------------------------------          
+download_rke(){
+    VERSION=${1}
+    if [ -z "${1}" ]
+    then
+        echo "Missing version"
+        echo "Downloading latest"
+        VERSION=$(curl -qsL https://api.github.com/repos/rancher/rke/releases/latest  |awk -F ":" '/tag_name/{print $2}' |sed -e 's/"//g' -e 's/,//' -e 's/ //')
+    fi
+    ARCH=$(uname -m)
+    if [ "$ARCH" = "x86_64" ]
+    then
+        ARCH="amd64"
+    fi
+    BIN=$(echo $(uname -s)-${ARCH} |tr '[:upper:]' '[:lower:]')
+    if [ ! -f ~/Downloads/rke/rke_${BIN}_${VERSION} ]
+    then
+        if [ ! -d ~/Downloads/rke ]
+                then
+                        mkdir -p ~/Downloads/rke
+                fi
+        URL="https://github.com/rancher/rke/releases/download/${VERSION}/rke_${BIN}"
+        curl -L $URL -o ~/Downloads/rke/rke_${BIN}_${VERSION}
+    fi
+        cp -p ~/Downloads/rke/rke_${BIN}_${VERSION} ./rke_${BIN}
+        if [ -e rke_${BIN} ]
+        then
+            mv rke_${BIN} rke
+            chmod 755 rke
+            ./rke -v
+        fi
+}
+ 
+download_kubectl(){
+    K8S_VERSION=${1}
+    if [ -z "${1}" ]
+    then
+      echo "Missing version"
+      echo "Downloading latest"
+      K8S_VERSION=$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)
+    fi
+    ARCH=$(uname -m)
+    if [ "$ARCH" = "x86_64" ]
+    then
+        ARCH="amd64"
+    fi
+    OS=$(echo $(uname -s)|tr '[:upper:]' '[:lower:]')
+    K8S_BIN_BASE="https://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}"
+    K8S_CTL_URL="${K8S_BIN_BASE}/bin/${OS}/${ARCH}/kubectl"
+    echo ${K8S_CTL_URL}
+    if [ ! -f ~/Downloads/kubectl/kubectl_${K8S_VERSION} ]
+    then
+        if [ ! -d ~/Downloads/kubectl ]
+        then
+            mkdir -p ~/Downloads/kubectl
+        fi
+        echo "Downloading ${K8S_VERSION}"
+        curl -o ~/Downloads/kubectl/kubectl_${K8S_VERSION} -L ${K8S_CTL_URL}
+    fi
+    cp -p ~/Downloads/kubectl/kubectl_${K8S_VERSION} .
+    chmod 755 kubectl_${K8S_VERSION}
+    mv kubectl_${K8S_VERSION} kubectl
+}
+ 
+download_helm3(){
+# https://get.helm.sh/helm-v3.3.4-darwin-amd64.tar.gz
+ 
+VERSION=${1}
+    if [ -z "${1}" ]
+    then
+        echo "Missing version"
+        echo "Downloading latest"
+        VERSION=$(curl -qsL https://api.github.com/repos/helm/helm/releases/latest |awk -F ":" '/tag_name/{print $2}' |sed -e 's/"//g' -e 's/,//' -e 's/ //')
+    fi
+    ARCH=$(uname -m)
+    if [ "$ARCH" = "x86_64" ]
+    then
+        ARCH="amd64"
+    fi
+    BIN=$(echo $(uname -s)-${ARCH} |tr '[:upper:]' '[:lower:]')
+    URL="https://get.helm.sh/helm-${VERSION}-${BIN}.tar.gz"
+    echo ${URL}
+    if [ ! -f ~/Downloads/helm/helm-${VERSION}-${BIN}.tar.gz ]
+    then
+        if [ ! -d ~/Downloads/helm ]
+        then
+            mkdir -p ~/Downloads/helm
+        fi
+        echo "Downloading Helm ${VERSION}"
+        curl -o ~/Downloads/helm/helm-${VERSION}-${BIN}.tar.gz -L ${URL}
+    fi
+    tar -xvf  ~/Downloads/helm/helm-${VERSION}-${BIN}.tar.gz --strip-components 1 ${BIN}/helm
+    chmod 755 helm
+}

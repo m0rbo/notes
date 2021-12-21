@@ -1,0 +1,28 @@
+server:
+rmt-cli sync
+rmt-cli -h
+rmt-cli products list --all
+rmt-cli products enable 1939
+rmt-cli repos list --all
+rmt-cli repos enable 3647
+rmt-cli repos disable 1878
+rmt-cli repos clean
+rmt-cli 
+rmt-cli repos enable 4161 4251 4241 4221 4191 4136 4116 4096
+rmt-cli  mirror
+rmt-cli repos custom list
+rmt-cli repos custom -a
+rmt-cli repos custom 
+rmt-cli mirror product 1884
+
+
+
+
+Client side:
+SUSEConnect -d
+SUSEConnect --cleanup
+
+wget http://rmt/tools/rmt-client-setup
+chmod +x rmt-client-setup 
+./rmt-client-setup 
+./rmt-client-setup --host s15rmt.suse

@@ -1,0 +1,7 @@
+edit 
+/usr/share/applications/slack.desktop
+change
+Exec=/usr/bin/slack %U
+to
+Exec=/usr/bin/slack %U -s
+
