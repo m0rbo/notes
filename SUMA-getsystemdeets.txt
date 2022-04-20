@@ -1,0 +1,34 @@
+#!/usr/bin/perl
+####################
+#bbendily Nov 2019
+# get a copy of all the packages from a specific channel and copy them to a local directory
+# have to get a list of all the pakcages in that channel first, then copy them to /tmp/channelname.
+####################
+use Frontier::Client;
+use File::Copy;
+my $HOST = 'sumaserver.example.com';
+my $user = 'sumaadmin';
+my $pass = $ARGV[0];
+#my $pass = 'password';
+my $channelname = 'sles12-sp4-sap-pool-x86-64-clone-08152019';
+$dirname = "/tmp/$channelname";
+mkdir $dirname, 0755;
+
+my $client = new Frontier::Client(url => "http://$HOST/rpc/api");
+my $session = $client->call('auth.login',$user, $pass);
+#my $systems = $client->call('channel.software.listAllPackages', $session, "sles12-sp4-pool-x86_64");
+
+my $packlist = $client->call('channel.software.listAllPackages', $session, $channelname);
+foreach my $arraylist (@$packlist) {
+# print $arraylist->{'id'}." - ".$arraylist->{'name'}."-".$arraylist->{'version'}."-".$arraylist->{'release'}."\n";
+
+  my $packages = $client->call('packages.getDetails', $session, $arraylist->{'id'});
+  print $packages->{'name'}."\n";
+  #print $packages->{'path'}."\n";
+
+copy("/var/spacewalk/".$packages->{'path'},$dirname) or die "Copy failed: $!";
+
+}
+
+
+$client->call('auth.logout', $session);

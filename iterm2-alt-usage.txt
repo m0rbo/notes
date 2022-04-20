@@ -1,0 +1,6 @@
+https://superuser.com/questions/703911/iterm2-alt-dot-functionality-with-cmd-dot
+
+preferences, profile, keys.
+keyboard shortcut: alt .
+Action: Send Escape Sequence
+Esc+: .

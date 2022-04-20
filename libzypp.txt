@@ -1,0 +1,1 @@
+https://doc.opensuse.org/projects/libzypp/HEAD/classzypp_1_1media_1_1MediaManager.html#MediaAccessUrl

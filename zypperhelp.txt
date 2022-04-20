@@ -3,3 +3,8 @@ zypper info -t pattern patternname
 
 list all patterns info...
 zypper info -t pattern $(zypper se -t pattern|awk -F\| '{print $2}'|grep -v Name)
+
+zypper dup --from <repo>
+zypper dup --from SLE-Module-Adv-Systems-Management12-Updates
+
+

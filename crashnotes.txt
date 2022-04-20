@@ -1,0 +1,32 @@
+https://ruffell.nz/programming/writeups/2019/02/22/beginning-kernel-crash-debugging-on-ubuntu-18-10.html
+
+crash notes:
+When we first run crash, we get a list of basic system configuration, such as the kernel version, system uptime, the date, number of tasks, the hostname, what process was running, and the PID of the process.
+
+We can get a view of the processes the system was running with the ps command:
+
+Note that the crashed process is shown with ">".
+
+The log command brings up the contents of dmesg, for that particular session.
+
+The most interesting part is the bottom, where Oops message is printed to the log:
+
+
+For this particular crash, the Oops message prints out more than enough debugging information to solve this particular problem. But for more complex bugs, the bt command is interesting.
+
+bt normally shows the backtrace of the task which caused the system crash, but you can select other tasks and fetch their backtraces as well.
+
+The output for bt is:
+
+Let?s try and find the root cause of this crash. bt shows us that a write was taking place, due to all the write releated syscall functions and vfs write calls.
+
+bt shows us that the instruction pointer that caused the initial exception was inside the function sysrq_handle_crash, at offset +22.
+
+We can get a better view of sysrq_handle_crash by disassembling the function with the dis command:
+
+At offset +22, we see a call to mov BYTE PTR ds:0x0,0x1, which tried to move 1 into the address 0x0. Now, you can?t write to a null pointer, since reading or writing to address 0x0 is forbidden.
+
+We see that this causes a page fault, which eventually calls bad_area which then goes onto triggering a crash. From there, we can see __crash_kexec and machine_kexec take over after oops_end, and the system boots into the crash kernel to capture the dump.
+
+To look a little more closely at the root cause of the problem, we can fetch a copy of the kernel source code and review it:
+

@@ -1,0 +1,93 @@
+
+Erico Mendonca
+
+Couple months back I was trying to get? an autoinstallation lab with Igor from L1, I noticed parts of this documentation aren't exactly complete too.
+
+
+Samuel Snow sent him a small guide of working options
+
+Here are the?autoinstallation upgrade instructions for this customer.
+1 - Configure a Distribution for SLES for SAP?upgrade to SLES 15 SP3
+A) Documentationhttps://documentation.suse.com/suma/4.2/en/suse-manager/client-configuration/client-upgrades-major.html
+The customer already followed this, looking at their email, it looks like they have most of this configured properly.
+
+
+We'll go over the things they may be missing below.
+B) Channel Mirroring
+They mentioned they should have everything mirrored already, which is good.
+
+
+2 - Configuring?the Profile
+
+A) Profile Kernel Options
+When configuring the profile, there is a "Kernel Options" area.?
+
+
+Using the information they passed over, I recommend they try these options:autoupgrade=1 insecure=1 useonlinerepo install=http://172.21.50.62/ks/dist/sles-15-sp3-sap self_update=0
+B) File Contents /?Autoinstallation Script
+Have them use the attached script "SLES_SAP_12SP5-to-SLES_SAP_15SP3.xml"
+
+C) Profile Variables
+Select the "Variables Tab".
+
+
+At least these variables should be configured:registration_key=1-Autoinstallation-update-sles-15-sp3-sap org=1 distrotree=sles-15-sp3-sap
+
+They'll want to double-check these values.
+The "registration_key" should be the activation key they want used after the upgrade.
+
+
+It should be preceded by a "1-" (found in SUSE Manager>Systems>Activation keys).The distrotree value is the distribution label.
+Many of the other variables in the script will get populated automatically.
+
+
+They can verify if the variables are configured correctly, by navigating to the "Autoinstallation File" tab and run a "ctrl-f" in the browser; search for?$.
+
+
+They should only see 4 results, in the "YAOU_SYSCFGFILE=" section.
+
+
+Otherwise, there is probably a missing variable.
+
+
+3 - Running the Upgrade
+
+A)?Static Network Configuration
+If DHCP is unavailable, a static network configuration should be used, and added to the individual system's kernel options during the upgrade (Under "Advanced Configuration" mentioned in the next step).
+
+
+See the documentation here under "Static Network Configuration":https://documentation.suse.com/sles/15-SP3/single-html/SLES-autoyast/#ay-adv-network
+
+B) Initiating the Upgrade
+Navigate to the system in the SUSE Manager webUI > Provisioning > Schedule.
+
+
+Select the profile, then "Advanced Configuration".
+
+
+For Kernel Options select "As specified by the profile".
+
+
+If everything looks good select "Schedule?Autoinstallation and Finish"
+
+C) Watching the Upgrade
+If you have console access, you can watch the upgrade.
+
+
+After this point the upgrade should be completely automated.
+
+
+If all goes to plan, the system will receive grub configuration changes, reboot by itself, load and begin the?autoinstallation.
+
+
+After it's done with the installation, it will reboot itself, and it should re-register itself to SUSE Manager.
+
+D) Errors:
+I tested the above?autoinstallation, and it worked in my environment.
+
+
+If the customer has errors, have them take screenshots and update the support case.
+
+4) Additional Topics
+The customer may have additional questions about orphan packages, and perhaps arriving at CLM channels instead of base channels during the upgrade. If they have a successful test, we can talk about these other topics.
+

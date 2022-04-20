@@ -1,0 +1,47 @@
+Just to complete this thread, here's how-to re-create the USB drive manually.
+
+Download the firmware from UBNT download page and follow steps below (I'll use Linux examples but this can be done on Windows and OS-X as well given proper tools and little expertise).
+
+ 
+
+Insert new USB drive into the PC and create MSDOS partition table with two partitions. 1st partition FAT32 150MB and 2nd partition is ext3 with size to end of the drive (use min. 2GB drive)
+
+(my new USB drive in this example is /dev/sdc)
+
+# parted -s /dev/sdc mktable msdos
+# parted -s /dev/sdc mkpart primary fat32 1 150MB
+# parted -s /dev/sdc mkpart primary ext3 150MB 100%
+# mkfs.vfat /dev/sdc1
+# mkfs.ext3 -q /dev/sdc2
+Download the firmware and untar it
+
+# wget http://dl.ubnt.com/firmwares/edgemax/v1.8.0/ER-e100.v1.8.0.4853089.tar
+# tar xf ER-e100.v1.8.0.4853089.tar
+Create mount points and mount the partitions
+
+# mkdir /tmp/er_sdc1 /tmp/er_sdc2
+# mount /dev/sdc1 /tmp/er_sdc1
+# mount /dev/sdc2 /tmp/er_sdc2
+Copy the extracted firmware files to the respective locations (pay attention to filenames)
+
+# cp vmlinux.tmp /tmp/er_sdc1/vmlinux.64
+# cp vmlinux.tmp.md5 /tmp/er_sdc1/vmlinux.64.md5
+
+# cp squashfs.tmp /tmp/er_sdc2/squashfs.img
+# cp squashfs.tmp.md5 /tmp/er_sdc2/squashfs.img.md5
+# cp version.tmp /tmp/er_sdc2/version
+# mkdir -p /tmp/er_sdc2/w
+
+# sync
+
+At this point you're done. Next step is optional to verify files integrity.
+
+# diff -s <(md5sum /tmp/er_sdc1/vmlinux.64 | awk -F ' ' '{print $1}') <(cat /tmp/er_sdc1/vmlinux.64.md5)
+Files /dev/fd/63 and /dev/fd/62 are identical
+
+# diff -s <(md5sum /tmp/er_sdc2/squashfs.img | awk -F ' ' '{print $1}') <(cat /tmp/er_sdc2/squashfs.img.md5)
+Files /dev/fd/63 and /dev/fd/62 are identical
+Unmount the USB drive
+
+# umount /tmp/er_sdc1 /tmp/er_sdc2
+Done. Place the USB drive into ER and boot up.

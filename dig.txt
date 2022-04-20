@@ -1,0 +1,10 @@
+dig doesn't do short hostname lookups by default.
+add +search
+dig +search sles124c1 @192.168.0.190
+
+sometimes also noedns?
+add +noedns: $ dig +noedns google.com.
+
+
+ref:
+https://serverfault.com/questions/434581/why-can-host-and-nslookup-resolve-a-name-but-dig-cannot
